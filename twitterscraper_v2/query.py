@@ -34,11 +34,14 @@ def query_single_page(url, html_response=True, retry=3):
         response = requests.get(url, headers=headers)
         if html_response:
             html = response.text
+            urls = Tweet.from_html(html)
         else:
             json_resp = response.json()
             html = json_resp['items_html']
-
+            urls = Tweet.from_html(html)
         tweets = list(Tweet.from_html(html))
+
+        print(urls)
 
         if not tweets:
             return [], None

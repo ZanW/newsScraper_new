@@ -1,6 +1,7 @@
 """
 This is a command line application that allows you to scrape twitter!
 """
+
 import collections
 import json
 from argparse import ArgumentParser
@@ -11,6 +12,7 @@ import logging
 
 from twitterscraper import query_tweets
 from twitterscraper.query import query_all_tweets
+from twitterscraper.tweet import Tweet
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -34,6 +36,10 @@ class JSONEncoder(json.JSONEncoder):
 
 
 def main():
+    s = "fuck"
+    print(s)
+
+
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
     try:
         parser = ArgumentParser(
