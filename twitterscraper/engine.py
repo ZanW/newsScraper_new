@@ -7,6 +7,7 @@ from datetime import datetime
 from collections import OrderedDict
 from newspaper import Article
 import requests
+import string
 
 # set x to start date, set y to end date,
 # note x < y, (x,y must be 1 digit)
@@ -34,9 +35,10 @@ if x != 0 and y != 0 and len('x') == 1 and len('y') == 1:
             short_url.append(tweet.url)
             docker.append(tweet)
             text = tweet.text.encode('utf-8').decode('utf-8')
+            #text = tweet.text.encode('utf-8')
             text = re.sub(r"http\s+", "", text)
             title.append(text)
-            testdata = text.encode('utf-8')
+            #testdata = text.encode('utf-8')
             time.append(tweet.timestamp)
             if x == y: break
 
@@ -46,9 +48,10 @@ elif x != 0 and y != 0 and len('x') == 1 and len('y') == 2:
             short_url.append(tweet.url)
             docker.append(tweet)
             text = tweet.text.encode('utf-8').decode('utf-8')
+            #text = tweet.text.encode('utf-8')
             text = re.sub(r"http\s+", "", text)
             title.append(text)
-            testdata = text.encode('utf-8')
+            #testdata = text.encode('utf-8')
             time.append(tweet.timestamp)
             if x == y: break
 
@@ -57,10 +60,11 @@ elif x == 0 and y == 0:
     for tweet in query_tweets(keyword, l)[:l]:
         short_url.append(tweet.url)
         docker.append(tweet)
-        text = tweet.text.encode('utf-8').decode('utf-8')
+        text = tweet.text.encode('utf-8').decode('utf-8') # decode() removes binary mark: b'
+        #text = tweet.text.encode('utf-8')
         text = re.sub(r"http\s+", "", text)
         title.append(text)
-        testdata = text.encode('utf-8')
+        #testdata = text.encode('utf-8')
         time.append(tweet.timestamp)
 #        if x == y: break
 
@@ -70,9 +74,10 @@ elif x != 0 and y != 0 and len('x') == 2 and len('y') == 2:
             short_url.append(tweet.url)
             docker.append(tweet)
             text = tweet.text.encode('utf-8').decode('utf-8')
+            #text = tweet.text.encode('utf-8')
             text = re.sub(r"http\s+", "", text)
             title.append(text)
-            testdata = text.encode('utf-8')
+            #testdata = text.encode('utf-8')
             time.append(tweet.timestamp)
             if x == y: break
 
@@ -117,7 +122,7 @@ short_url = short_url[::-1] # reverse urls
 # create (timestamp,text) tuples in one list: text here contains title, url
 TupleList1 = []
 for i in range(len(docker)):
-    TupleList1.append((temp[i], docker[i].text.encode('utf-8')))
+    TupleList1.append((temp[i], docker[i].text.encode('utf-8').decode('utf-8')))
 
 # create (timestamp,shortURL) tuples in one list
 TupleList2 = []
@@ -197,23 +202,85 @@ for i in range(len(TupleList3)):  # Num of Touplist equals that of dockers
 
 
 #inOrder = OrderedDict(assort)
-'''
-# store timestamp, url, title, text into table 'newsinfo' of database 'twitternews'
+
+# store timestamp, url, title, text into table 'newsinfo' in database 'twitternews'
 conn = pymysql.connect(host = "127.0.0.1", user = "root", passwd = "root", db = "twitternews")
 
+'''
+# add try...except
 for i in range(len(temp)):
     try:
         TmStamp = temp[i]
-        HUrl = url[i]
+        HUrl = H_url[i]
         TTitle = title[i]
-        TText = news_text[0]
-        sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values("'"+Tmtamp+"'","'"+TTitle+"'","'"+HUrl+"'","'"+TText+"'")"
+        TText = news_text[i].decode()
+        TText = TText.replace("'", " ")
+        TText = TText.replace('"', ' ')
+
+        print("*********************************************")
+        print(TmStamp)
+        print(HUrl)
+        print(TTitle)
+        print(TText)
+        print("*********************************************")
+
+        #sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
+        sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
+
         conn.query(sql)
-    except: 
+    except:
+        print("sql error")
         sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('N/A', 'N/A', 'N/A', 'N/A')"
+        conn.query(sql)
+
+'''
+
+
+for i in range(len(temp)):
+
+    TmStamp = temp[i]
+    HUrl = H_url[i]
+    TTitle = title[i]
+    TText = news_text[i]
+
+    # remove punctuation in TText
+    exclude = set(string.punctuation)
+    TText = ''.join(ch for ch in TText if ch not in exclude)
+    TText = TText.replace("'", "")
+    TText = TText.replace("-", "")
+    TText = TText.replace('"', '')
+    TText = TText.replace("’", "")
+    TText = TText.replace("”", "")
+    TText = TText.replace("“", "")
+    TText = TText.replace("‘", "")
+    #TText = "'''" + TText + "'''"
+    print(len(TText))
+
+    # remove punctuation in TTitle
+    exclude = set(string.punctuation)
+    TTitle = ''.join(ch for ch in TTitle if ch not in exclude)
+    TTitle = TTitle.replace("'", "")
+    TTitle = TTitle.replace("-", "")
+    TTitle = TTitle.replace('"', '')
+    TTitle = TTitle.replace("’", "")
+    TTitle = TTitle.replace("”", "")
+    TTitle = TTitle.replace("“", "")
+    TTitle = TTitle.replace("‘", "")
+
+    print("*********************************************")
+    print(TmStamp)
+    print(HUrl)
+    print(TTitle)
+    print(TText)
+    print("*********************************************")
+
+    #sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
+    sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
+
+    conn.query(sql)
 
 conn.close()
-'''
+
 
 
 print(assort1)
