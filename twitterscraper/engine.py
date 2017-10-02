@@ -8,11 +8,13 @@ from collections import OrderedDict
 from newspaper import Article
 import requests
 import string
+import re
 
 # set x to start date, set y to end date,
 # note x < y, (x,y must be 1 digit)
-x = 26
-y = 27
+# x = 0, y = 0 get latest news
+x = 27
+y = 28
 
 # set m to month(if 1 digit, place 0 before it. e.g: May is 05)
 m = 9
@@ -206,36 +208,147 @@ for i in range(len(TupleList3)):  # Num of Touplist equals that of dockers
 # store timestamp, url, title, text into table 'newsinfo' in database 'twitternews'
 conn = pymysql.connect(host = "127.0.0.1", user = "root", passwd = "root", db = "twitternews")
 
-'''
-# add try...except
+# use re.compile to remove all except things kept in []
 for i in range(len(temp)):
     try:
         TmStamp = temp[i]
         HUrl = H_url[i]
         TTitle = title[i]
-        TText = news_text[i].decode()
-        TText = TText.replace("'", " ")
-        TText = TText.replace('"', ' ')
+        TText = news_text[i]
+
+        regex = re.compile('[^a-zA-Z0-9\,\.\s]')
+        TTitle = regex.sub('', TTitle)
+        TText = regex.sub('', TText)
+
+        sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
+        conn.query(sql)
+
+    except:
+        print("sql error")
+        TmStamp = temp[i]
+        HUrl = H_url[i]
+        TTitle = title[i]
+        TText = news_text[i]
+
+        regex = re.compile('[^a-zA-Z0-9\,\.\s]')
+        TTitle = regex.sub('', TTitle)
+        TText = regex.sub('', TText)
+        # add quotation to text start and end
+        TText = "'''" + TText + "'''"
+
+        # insert into database after adding new quotation
+        sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
+        # sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('N/A', 'N/A', 'N/A', 'N/A')"
+        conn.query(sql)
+
+        '''
+        try:
+            # insert into database after adding new quotation
+            sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
+            # sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('N/A', 'N/A', 'N/A', 'N/A')"
+            conn.query(sql)
+        except:
+            print("sql error after adding quotation")
+        '''
 
         print("*********************************************")
         print(TmStamp)
         print(HUrl)
         print(TTitle)
+        print(news_text)
         print(TText)
         print("*********************************************")
 
-        #sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
-        sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
-
-        conn.query(sql)
-    except:
-        print("sql error")
-        sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('N/A', 'N/A', 'N/A', 'N/A')"
-        conn.query(sql)
 
 '''
+# store into database: (2) without try...except statement
+for i in range(len(temp)):
+    try:
+        TmStamp = temp[i]
+        HUrl = H_url[i]
+        TTitle = title[i]
+        TText = news_text[i]
+
+        # remove punctuation in TTitle
+        exclude = set(string.punctuation)
+        TTitle = ''.join(ch for ch in TTitle if ch not in exclude)
+        TTitle = TTitle.replace("'", "")
+        TTitle = TTitle.replace("-", "")
+        TTitle = TTitle.replace('"', '')
+        TTitle = TTitle.replace("’", "")
+        TTitle = TTitle.replace("”", "")
+        TTitle = TTitle.replace("“", "")
+        TTitle = TTitle.replace("‘", "")
+        TTitle = TTitle.replace("…", "")
+
+        # remove punctuation in TText
+        exclude = set(string.punctuation)
+        TText = ''.join(ch for ch in TText if ch not in exclude)
+        TText = TText.replace("'", "")
+        TText = TText.replace("-", "")
+        TText = TText.replace('"', '')
+        TText = TText.replace("’", "")
+        TText = TText.replace("”", "")
+        TText = TText.replace("“", "")
+        TText = TText.replace("‘", "")
+        TTitle = TTitle.replace("…", "")
+
+        #sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
+        sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
+        conn.query(sql)
+        
+    except:
+        print("sql error")
+
+        TmStamp = temp[i]
+        HUrl = H_url[i]
+        TTitle = title[i]
+        TText = news_text[i]
+
+        # remove punctuation in TTitle
+        exclude = set(string.punctuation)
+        TTitle = ''.join(ch for ch in TTitle if ch not in exclude)
+        TTitle = TTitle.replace("'", "")
+        TTitle = TTitle.replace("-", "")
+        TTitle = TTitle.replace('"', '')
+        TTitle = TTitle.replace("’", "")
+        TTitle = TTitle.replace("”", "")
+        TTitle = TTitle.replace("“", "")
+        TTitle = TTitle.replace("‘", "")
+        TTitle = TTitle.replace("…", "")
+
+        # remove punctuation in TText
+        exclude = set(string.punctuation)
+        TText = ''.join(ch for ch in TText if ch not in exclude)
+        TText = TText.replace("'", "")
+        TText = TText.replace("-", "")
+        TText = TText.replace('"', '')
+        TText = TText.replace("’", "")
+        TText = TText.replace("”", "")
+        TText = TText.replace("“", "")
+        TText = TText.replace("‘", "")
+        TText = TText.replace('—', '')
+        TTitle = TTitle.replace("…", "")
+        # add quotation to text start and end
+        TText = "'''" + TText + "'''"
+
+        try:
+            # insert into database after adding new quotation
+            sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
+            #sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('N/A', 'N/A', 'N/A', 'N/A')"
+            conn.query(sql)
+        except: print("sql error after adding quotation")
+
+        print("*********************************************")
+        print(TmStamp)
+        print(HUrl)
+        print(TTitle)
+        print(news_text)
+        print(TText)
+        print("*********************************************")
 
 
+# store into database: (1) without try...except statement
 for i in range(len(temp)):
 
     TmStamp = temp[i]
@@ -253,6 +366,7 @@ for i in range(len(temp)):
     TText = TText.replace("”", "")
     TText = TText.replace("“", "")
     TText = TText.replace("‘", "")
+    TText = TText.replace('—', '')
     #TText = "'''" + TText + "'''"
     print(len(TText))
 
@@ -278,7 +392,7 @@ for i in range(len(temp)):
     sql = "insert into newsinfo(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
 
     conn.query(sql)
-
+'''
 conn.close()
 
 
