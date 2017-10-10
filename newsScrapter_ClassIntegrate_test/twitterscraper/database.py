@@ -6,7 +6,7 @@ from twitterscraper.similarity import Similarity
 class Database:
     @classmethod
     def clear_table(self):
-        print("start to clear all in tables")
+        print("start to clear all in tables\n")
         conn = pymysql.connect(host="127.0.0.1", user="root", passwd="root", db="twitternews")
         sql1 = "delete from newinfo_raw"
         sql2 = "delete from newinfo_simifre"
@@ -81,7 +81,7 @@ class Database:
                 HUrl = ''.join(H_url[i][0])
                 TTitle = title[i]
                 if len(''.join(news_text[i][0])) == 0:
-                    TText = 'N\/A'
+                    TText = 'N\\/A'
                 else:
                     TText =''.join(news_text[i][0])
                 fre = str(frequency[i][0])
@@ -100,7 +100,7 @@ class Database:
                 HUrl = ''.join(H_url[i][0])
                 TTitle = title[i]
                 if len(''.join(news_text[i][0])) == 0:
-                    TText = 'N\/A'
+                    TText = 'N\\/A'
                 else:
                     TText = ''.join(news_text[i][0])
                 fre = str(frequency[i][0])

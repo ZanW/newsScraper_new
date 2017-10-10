@@ -11,16 +11,16 @@ from twitterscraper.database import Database
 from twitterscraper.query import query_tweets
 
 # set x to start date, set y to end date,
-# note x < y, (x,y must be 1 digit)
+# note x < y, (x,y must be less than 2 digit)
 # x = 0, y = 0 get latest news
 x = 0
 y = 0
 
 # set m to month(if 1 digit, place 0 before it. e.g: May is 05)
-m = 0
+m = 10
 
 # set l to No. of news to scrape(l >= 1)
-l = 5
+l = 1000
 
 # set keyword for searching
 keyword = "bitcoin"
@@ -159,15 +159,15 @@ for i in range(len(TupleList2)):  # Num of Touplist equals that of dockers
 resp = []
 H_url = [] # "http://" + "short_url"
 session = requests.Session()  # so connections are recycled
-news_cont = 0
+news_title = 0
 for url in short_url:
     try:
         print("http://" + url)
         H_url.append("http://" + url)
         resp.append(session.head("http://" + url, allow_redirects=True))
     except: resp.append("error")
-    news_cont+=1
-    print(str(news_cont) + " news has been scraped")
+    news_title += 1
+    print(str(news_title) + " news titles have been scraped")
 
 '''
 # mining news from corresponding longURL; store news texts in text[]
@@ -186,11 +186,12 @@ for r in resp:
 
 # mining news from "http:// + short_url"; store news texts in text[]
 news_text = []
+text_cont = 0
 for r in H_url:
 
     print("sleep starts...")
-    time.sleep(2) # avoid annoying twitter server, parse text every 2 seconds
-    print("sleep complete...")
+    time.sleep(3) # avoid annoying twitter server, parse text every 2 seconds
+    print("sleep complete...\n")
 
     try:
         article = Article(r)
@@ -199,6 +200,8 @@ for r in H_url:
         news_text.append(article.text)
     except:
         news_text.append("Error")
+    text_cont += 1
+    print(str(text_cont) + " news text have been scraped")
 
 
 # create (timestamp,news_text) tuples in one list
@@ -259,6 +262,7 @@ for i in range(len(Title_Text)):  # Num of Title_Time equals that of dockers
 #################################### database operation starts #######################################
 print("database operation starts\n")
 
+# release database from old redundant data
 Database.clear_table()
 
 # write raw data to database newinfo_raw
