@@ -1,6 +1,7 @@
 from datetime import datetime
 from bs4 import BeautifulSoup
 from coala_utils.decorators import generate_ordering
+import time
 
 
 @generate_ordering('timestamp', 'id', 'text', 'user', 'replies', 'retweets', 'likes', 'url')
@@ -20,7 +21,7 @@ class Tweet:
     @classmethod
     def from_soup(cls, tweet):
         return cls(
-            user=tweet.find('span', 'username').text[1:],
+            user=tweet.find('span', 'username').text[1:], # get text under specific tags
             id=tweet['data-item-id'],
             timestamp=datetime.utcfromtimestamp(
                 int(tweet.find('span', '_timestamp')['data-time'])),

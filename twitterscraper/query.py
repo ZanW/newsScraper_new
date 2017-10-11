@@ -3,6 +3,7 @@ import logging
 import random
 import sys
 from datetime import timedelta, date
+import time
 from multiprocessing.pool import Pool
 
 import requests
@@ -97,6 +98,7 @@ def query_tweets_once(query, limit=None, num_tweets=0):
     query = query.replace(' ', '%20').replace("#", "%23").replace(":", "%3A")
     pos = None
     tweets = []
+
     try:
         while True:
             new_tweets, pos = query_single_page(
@@ -104,6 +106,7 @@ def query_tweets_once(query, limit=None, num_tweets=0):
                 else RELOAD_URL.format(q=query, pos=pos),
                 pos is None
             )
+
             if len(new_tweets) == 0:
                 logging.info("Got {} tweets for {}.".format(
                     len(tweets), query))
@@ -151,6 +154,7 @@ def query_tweets(query, limit=None):
     iteration = 1
 
     while limit is None or len(tweets) < limit:
+
         logging.info("Running iteration no {}, query is {}".format(
             iteration, repr(query)))
         new_tweets = query_tweets_once(query, limit, len(tweets))
