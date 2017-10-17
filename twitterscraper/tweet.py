@@ -30,14 +30,14 @@ class Tweet:
             replies = tweet.find('div', 'ProfileTweet-action--reply').find('span', 'ProfileTweet-actionCountForPresentation').text or '0',
             retweets = tweet.find('div', 'ProfileTweet-action--retweet').find('span', 'ProfileTweet-actionCountForPresentation').text or '0',
             likes = tweet.find('div', 'ProfileTweet-action--favorite').find('span', 'ProfileTweet-actionCountForPresentation').text or '0',
-            url = BeautifulSoup(str(tweet.find('span', 'js-display-url')), "lxml").get_text() or "N/A"
+            url = BeautifulSoup(str(tweet.find('span', 'js-display-url')), "lxml").get_text() or ""
         )
 
     @classmethod
     def from_html(cls, html):
         #url = []
         soup = BeautifulSoup(html, "lxml")
-        tweets = soup.find_all('li', 'js-stream-item')
+        tweets = soup.find_all('li', 'js-stream-item') # find_all("p", "title") find a <p> tag with the CSS class “title”
         if tweets:
             for tweet in tweets:
                 try:

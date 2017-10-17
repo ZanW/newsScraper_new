@@ -11,8 +11,8 @@ from json import dump
 import logging
 
 from twitterscraper import query_tweets
-from twitterscraper.query import query_all_tweets
-from twitterscraper.tweet import Tweet
+from query import query_all_tweets
+from tweet import Tweet
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -36,9 +36,6 @@ class JSONEncoder(json.JSONEncoder):
 
 
 def main():
-    s = "fuck"
-    #print(s)
-
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
     try:

@@ -1,18 +1,18 @@
 import pymysql
 import re
-from twitterscraper.similarity import Similarity
+from similarity import Similarity
 
 
 class Database:
     @classmethod
     def clear_table(self):
-        print("start to clear all in tables\n")
+        print("start to clear all information in tables\n")
         conn = pymysql.connect(host="127.0.0.1", user="root", passwd="root", db="twitternews")
         sql1 = "delete from newinfo_raw"
         sql2 = "delete from newinfo_simifre"
         conn.query(sql1)
         conn.query(sql2)
-        print("table clear complete\n")
+        print("table clear completes\n")
 
     @classmethod
     def set_raw(cls, temp, H_url, title, news_text):
@@ -36,8 +36,10 @@ class Database:
 
                 regex = re.compile('[^a-zA-Z0-9\,\.\s]')
                 TTitle = regex.sub('', TTitle)
-                TText = regex.sub('', TText)
-
+                if isinstance(TText, str):
+                    TText = regex.sub('', TText)
+                else:
+                    TText = ""
                 sql = "insert into newinfo_raw(Tstamp, Title, URL, Texts) values('" + TmStamp + "','" + TTitle + "','" + HUrl + "','" + TText + "')"
                 conn.query(sql)
 
@@ -52,7 +54,10 @@ class Database:
 
                 regex = re.compile('[^a-zA-Z0-9\,\.\s]')
                 TTitle = regex.sub('', TTitle)
-                TText = regex.sub('', TText)
+                if isinstance(TText, str):
+                    TText = regex.sub('', TText)
+                else:
+                    TText = ""
                 # add quotation to text start and end
                 TText = "'''" + TText + "'''"
 
@@ -80,10 +85,13 @@ class Database:
                 TmStamp = ''.join(temp[i][0])
                 HUrl = ''.join(H_url[i][0])
                 TTitle = title[i]
-                if len(''.join(news_text[i][0])) == 0:
-                    TText = 'N\\/A'
-                else:
-                    TText =''.join(news_text[i][0])
+                try:
+                    if len(''.join(news_text[i][0])) == 0:
+                        TText = 'No Text Available in this tweet'
+                    else:
+                        TText =''.join(news_text[i][0])
+                except:
+                    TText = 'No URL Available in this tweet'
                 fre = str(frequency[i][0])
 
                 regex = re.compile('[^a-zA-Z0-9\,\.\s]')
@@ -100,7 +108,7 @@ class Database:
                 HUrl = ''.join(H_url[i][0])
                 TTitle = title[i]
                 if len(''.join(news_text[i][0])) == 0:
-                    TText = 'N\\/A'
+                    TText = 'No Text Available in this link'
                 else:
                     TText = ''.join(news_text[i][0])
                 fre = str(frequency[i][0])
@@ -110,10 +118,6 @@ class Database:
                 TText = regex.sub('', TText)
                 # add quotation to text start and end
                 TText = "'''" + TText + "'''"
-
-
-
-
 
 
 

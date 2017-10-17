@@ -8,7 +8,7 @@ from multiprocessing.pool import Pool
 
 import requests
 from fake_useragent import UserAgent
-from twitterscraper.tweet import Tweet
+from tweet import Tweet
 
 
 ua = UserAgent()
@@ -43,7 +43,7 @@ def query_single_page(url, html_response=True, retry=3):
     try:
         response = requests.get(url, headers=headers)
         if html_response:
-            html = response.text
+            html = response.text # http://docs.python-requests.org/en/v0.10.6/api/#requests.Response
             urls = Tweet.from_html(html)
         else:
             json_resp = response.json()
@@ -181,8 +181,18 @@ def query_tweets(query, limit=None):
         query += ' until:' + mindate.isoformat()
         iteration += 1
 
+        print("length of raw tweets: " + str(len(tweets)))
+
+    # remove redundancy if scraped tweets surpass limits
+    if len(tweets) > limit:
+        redun = len(tweets) - limit
+        for i in range(redun):
+            del tweets[-(i + 1)]
+    print("length of new tweets: " + str(len(tweets)))
+
     # Eliminate duplicates
-    return list(eliminate_duplicates(tweets))
+    # return list(eliminate_duplicates(tweets))
+    return tweets
 
 
 def query_all_tweets(query):

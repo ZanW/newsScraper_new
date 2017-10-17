@@ -23,9 +23,9 @@ class Similarity:
         fre = []
         index_to_remove = []  # store index of title intended to remove
         for i in range(len(R_simi)):
-            cont = 0
+            cont = 1
             for j in range(len(R_simi[i])):
-                if R_simi[i][j] >= 0.7 and j != i:  # if similarity bigger than 70% & not the same value in column vector and row vector, consider as relevant titles
+                if R_simi[i][j] >= 0.4 and j != i:  # if similarity bigger than 70% & not the same value in column vector and row vector, consider as relevant titles
                     cont += 1
                     index_to_remove.append((str(i), str(j)))  # get index pair of two relevant news title
             fre.append(cont)  # relevant frequency of each title to all stored in "titles" list

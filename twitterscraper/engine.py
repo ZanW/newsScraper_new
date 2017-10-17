@@ -1,29 +1,60 @@
 import re
 import time
+import newspaper
 import pymysql
 import requests
 from newspaper import Article
+from similarity import Similarity
+from database import Database
+from query import query_tweets
+import sys
 
-from twitterscraper.similarity import Similarity
+'''
+##################################### set parameter in code ####################
 
-from twitterscraper.database import Database
-
-from twitterscraper.query import query_tweets
-
-# set x to start date, set y to end date,
-# note x < y, (x,y must be less than 2 digit)
-# x = 0, y = 0 get latest news
-x = 0
-y = 0
+# set x to start date, set EndDay to end date,
+# note StarDate < EndDay
+# StartDay = 0, EndDay = 0 get latest news
+StartDay = 0
+EndDay = 0
 
 # set m to month(if 1 digit, place 0 before it. e.g: May is 05)
-m = 10
+month = 10
 
 # set l to No. of news to scrape(l >= 1)
-l = 1000
+l = 20
 
 # set keyword for searching
-keyword = "bitcoin"
+keyword = "aion ICO"
+
+
+'''
+#################################### set parameter via CMD #########################
+# set StartDay to start date, set EndDay to end date,
+# note StartDay < EndDay, (x,EndDay must be less than 2 digit)
+# StartDay = 0, y = 0 get latest news
+StartDay = int(sys.argv[3])
+EndDay = int(sys.argv[4])
+
+# set m to month(if 1 digit, place 0 before it. e.g: May is 05)
+month = int(sys.argv[2])
+
+# set l to No. of news to scrape(l >= 1)
+l = int(sys.argv[5])
+
+# set keyword for searching
+keyword = sys.argv[1]
+
+'''
+#################################### set parameter via input #########################
+keyword = input("please input your query keyword enclosed by ' ':")
+month = int(input("please input your query month(place 0 before unidigit e.g: 05) :"))
+StartDay = input("please input your query start day(input 0 for today):")
+EndDay = input("please input your query end day(input 0 for today):")
+l = int(input("please input intended query No. for news:"))
+print(l)
+'''
+
 
 tim = []
 short_url = []
@@ -32,9 +63,9 @@ docker = []
 title = []
 
 # "text" contains title & url information
-if x != 0 and y != 0 and len('x') == 1 and len('y') == 1:
-    for i in range(x, y):
-        for tweet in query_tweets(keyword + " since%3A2017-{}-0{} until%3A2017-{}-0{}".format(m, x, m, y), l)[:l]:
+if StartDay != 0 and EndDay != 0 and StartDay < EndDay:
+    #for i in range(x, y):
+        for tweet in query_tweets(keyword + "%20since%3A2017-{}-{}%20until%3A2017-{}-{}".format(month, StartDay, month, EndDay), l)[:l]:
             short_url.append(tweet.url)
             docker.append(tweet)
             text = tweet.text.encode('utf-8').decode('utf-8')
@@ -44,24 +75,10 @@ if x != 0 and y != 0 and len('x') == 1 and len('y') == 1:
             title.append(text)
             #testdata = text.encode('utf-8')
             tim.append(tweet.timestamp)
-            if x == y: break
-
-elif x != 0 and y != 0 and len('x') == 1 and len('y') == 2:
-    for i in range(x, y):
-        for tweet in query_tweets(keyword + " since%3A2017-{}-0{} until%3A2017-{}-{}".format(m, x, m, y), l)[:l]:
-            short_url.append(tweet.url)
-            docker.append(tweet)
-            text = tweet.text.encode('utf-8').decode('utf-8')
-            #text = tweet.text.encode('utf-8')
-            text = text.replace('\n', '')
-            text = re.sub(r'http\S+.*[\r\n]*', '', text, flags=re.MULTILINE)
-            title.append(text)
-            #testdata = text.encode('utf-8')
-            tim.append(tweet.timestamp)
-            if x == y: break
+            if StartDay == EndDay: break
 
 # current date by default
-elif x == 0 and y == 0:
+else:
     for tweet in query_tweets(keyword, l)[:l]:
         short_url.append(tweet.url)
         docker.append(tweet)
@@ -74,21 +91,6 @@ elif x == 0 and y == 0:
         tim.append(tweet.timestamp)
         #if x == y: break
 
-elif x != 0 and y != 0 and len('x') == 2 and len('y') == 2:
-    for i in range(x, y):
-        for tweet in query_tweets(keyword + " since%3A2017-{}-{} until%3A2017-{}-{}".format(m, x, m, y), l)[:l]:
-            short_url.append(tweet.url)
-            docker.append(tweet)
-            text = tweet.text.encode('utf-8').decode('utf-8')
-            #text = tweet.text.encode('utf-8')
-            text = text.replace('\n', '')
-            text = re.sub(r'http\S+.*[\r\n]*', '', text, flags=re.MULTILINE)
-            title.append(text)
-            #testdata = text.encode('utf-8')
-            tim.append(tweet.timestamp)
-            if x == y: break
-
-
 # compare timestamp in docker(compare min firstly, sec secondly), sorted in descending order
 for i in range(len(docker)):
     for j in range(i + 1, len(docker)):
@@ -96,7 +98,7 @@ for i in range(len(docker)):
             temp = docker[i]
             docker[i] = docker[j]
             docker[j] = temp
-        elif (docker[i].timestamp   .timetuple()[4] == docker[j].timestamp.timetuple()[4]) and (docker[i].timestamp.timetuple()[5] < docker[j].timestamp.timetuple()[5]):
+        elif (docker[i].timestamp.timetuple()[4] == docker[j].timestamp.timetuple()[4]) and (docker[i].timestamp.timetuple()[5] < docker[j].timestamp.timetuple()[5]):
             temp = docker[i]
             docker[i] = docker[j]
             docker[j] = temp
@@ -124,7 +126,7 @@ timeStamp_FM = [[] for i in range(len(timeStr))]
 for i in range(len(temp)):
     timeStamp_FM[i].append(temp[i])
 
-short_url = short_url[::-1] # reverse urls
+#short_url = short_url[::-1] # reverse urls
 
 # create (timestamp,text) tuples in one list: text here contains title, url
 TupleList1 = []
@@ -160,14 +162,22 @@ resp = []
 H_url = [] # "http://" + "short_url"
 session = requests.Session()  # so connections are recycled
 news_title = 0
+
 for url in short_url:
-    try:
-        print("http://" + url)
+    print(str((news_title+1)) + " news titles have been scraped")
+    print("News Title: "+title[news_title])
+    # print(url)
+    if url != "None":
         H_url.append("http://" + url)
+        print("http://" + url + "\n")
+    else:
+        H_url.append("No URL found in this tweet")
+        print("No URL found in this tweet\n")
+    try:
         resp.append(session.head("http://" + url, allow_redirects=True))
-    except: resp.append("error")
+    except:
+        resp.append("error")
     news_title += 1
-    print(str(news_title) + " news titles have been scraped")
 
 '''
 # mining news from corresponding longURL; store news texts in text[]
@@ -190,16 +200,22 @@ text_cont = 0
 for r in H_url:
 
     print("sleep starts...")
-    time.sleep(3) # avoid annoying twitter server, parse text every 2 seconds
-    print("sleep complete...\n")
+    time.sleep(1) # avoid annoying twitter server, parse text every 2 seconds
+    print("sleep completes...\n")
 
     try:
         article = Article(r)
-        article.download()
+        try:
+            article.download()
+        except:
+            pass
         article.parse()
-        news_text.append(article.text)
-    except:
-        news_text.append("Error")
+        if len(article.text) == 0:
+            news_text.append("No News to Scrape")
+        else:
+            news_text.append(article.text)
+    except newspaper.article.ArticleException as e:
+        news_text.append(e)
     text_cont += 1
     print(str(text_cont) + " news text have been scraped")
 
@@ -260,30 +276,30 @@ for i in range(len(Title_Text)):  # Num of Title_Time equals that of dockers
 
 
 #################################### database operation starts #######################################
-print("database operation starts\n")
+if not title:
+    print("No news available within the searching time window")
 
-# release database from old redundant data
-Database.clear_table()
+else:
+    print("database operation starts\n")
+    Database.clear_table()
 
-# write raw data to database newinfo_raw
-Database.set_raw(temp, H_url, title, news_text)
-print("raw data write into database complete\n")
+    # write raw data to database newinfo_raw
+    Database.set_raw(temp, H_url, title, news_text)
+    print("raw data write into database complete\n")
 
-# write raw data to database newinfo_simifre
-TitleFrequency = Similarity.get_simi_titlefre(title) #invoke function in similarity class to get title-frequency after similariy screen
+    # write raw data to database newinfo_simifre
+    TitleFrequency = Similarity.get_simi_titlefre(title) #invoke function in similarity class to get title-frequency after similariy screen
 
-frequency_similarity = list(TitleFrequency.values()) # dict to list
-title_similarity = list(TitleFrequency.keys()) # dict to list
-Frequency_similarity = TitleFrequency.values()
-Title_similarity = TitleFrequency.keys()
-URL_similarity = [dict_tu[titl] for titl in Title_similarity]
-TmStamp_similarity = [dict_tt[titl] for titl in Title_similarity]
-Text_similarity = [dict_tx[titl] for titl in Title_similarity]
+    frequency_similarity = list(TitleFrequency.values()) # dict to list
+    title_similarity = list(TitleFrequency.keys()) # dict to list
+    Frequency_similarity = TitleFrequency.values()
+    Title_similarity = TitleFrequency.keys()
+    URL_similarity = [dict_tu[titl] for titl in Title_similarity]
+    TmStamp_similarity = [dict_tt[titl] for titl in Title_similarity]
+    Text_similarity = [dict_tx[titl] for titl in Title_similarity]
 
-Database.set_simifre(TmStamp_similarity, URL_similarity, title_similarity, Text_similarity, frequency_similarity)
-print("similarity screened data write into database complete\n")
-
-#################################### database operation ends #######################################
+    Database.set_simifre(TmStamp_similarity, URL_similarity, title_similarity, Text_similarity, frequency_similarity)
+    print("similarity screened data write into database complete\n")
 
 
 
