@@ -155,10 +155,13 @@ text_cont = 0
 for r in H_url:
     print("sleep starts...")
     time.sleep(1)
-    print("sleep complete...\n")
+    print("sleep completes...\n")
     try:
         article = Article(r)
-        article.download()
+        try:
+            article.download()
+        except:
+            pass
         article.parse()
         if len(article.text) == 0:
             news_text.append("No News to Scrape")
