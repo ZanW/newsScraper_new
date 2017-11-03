@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>form</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="bower_components/jquery/dist/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="bower_components/bootstrap/js/bootstrap.js"></script>
+    <link rel="stylesheet" href="bower_components/bootstrap/css/bootstrap.css">
+
+</head>
+<body>
+
+<div id="search" class="container-fluid">
+    <div class="row">
+        <div class="col-md-6">
+            <div>
+                <h2 class="h2">
+                    Search for articles
+                </h2>
+            </div>
+            <div>
+                <div style="width: 400px" class="input-group" >
+                    <span class="input-group-addon" style="width: 100px;text-align: center">search for</span>
+                    <input type="text" id="input_keyword" class="form-control" placeholder="key word" style="width: 200px" required="required">
+                </div>
+
+                <div style="width: 400px" class="input-group">
+                    <span class="input-group-addon" style="width: 100px;text-align: center">from</span>
+                    <input type="date" id="input_from" class="form-control" placeholder="from" style="width: 200px" >
+                </div>
+                <div style="width: 400px" class="input-group">
+                    <span class="input-group-addon" style="width: 100px;text-align: center">to</span>
+                    <input type="date" id="input_to" class="form-control" style="width: 200px" >
+                </div>
+
+                <div style="width: 400px" class="input-group">
+                    <span class="input-group-addon" style="width: 100px;text-align: center">limit</span>
+                    <input type="text" id="input_limit" class="form-control" placeholder="at least 5" style="width: 200px" required>
+                </div>
+                <br>
+
+                <input style="width: 100px" type="submit" id="submit" class="btn btn-outline-success" value="go">
+                <input style="width: 100px" type="reset" value="clear" class="btn btn-outline-warning">
+                <!--<button style="width: 100px" class="btn btn-outline-success">chart</button>-->
+            </div>
+
+            <!--<div class="progress">-->
+                <!--<div class="progress-bar progress-bar-success" id="bar_raw" role="progressbar"></div>-->
+            <!--</div>-->
+            <!--<div class="progress">-->
+                <!--<div class="progress-bar progress-bar-info" id="bar_processed" role="progressbar"></div>-->
+            <!--</div>-->
+        </div>
+    </div>
+</div>
+
+<div id="chart">
+    <script src="bower_components/d3.v4.js"></script>
+    <script src="bubble.js"></script>
+
+
+</div>
+
+<div id="table" style="display: none">
+    <table id="data">
+        <tbody id="table_body">
+        <tr id="table_head">
+            <th style="width: 800px;">title</th>
+            <th style="width: 100px;">weight</th>
+            <!--<th style="width: 100px;">time</th>-->
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<script>
+
+    'use strict'
+    $(document).ready(function () {
+
+        var host = "http://localhost";
+        var port = ":5000"
+
+
+//        var getProgress = function () {
+//            $.ajax({
+//                url:host+"/search_job/progress",
+//                success:function (response) {
+//
+//                    var raw = JSON.parse(response)[0].raw;
+//                    var processed = JSON.parse(response)[0].processed;
+//                    console.log(raw)
+//                    console.log(processed)
+//                    $("#bar_raw").attr("style","width:"+raw*100+"%");
+//                    $("#bar_processed").attr("style","width:"+processed*100+"%");
+//                    if(raw>=1&&processed>=1){
+//                        console.log('return');
+//                        window.location.href='chart.html'
+//                    }
+//                }
+//            })
+//
+//            return setTimeout(getProgress,1000);
+//        }
+
+        var set_date =function () {
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1; //January is 0!
+            var yyyy = today.getFullYear();
+
+            if(dd<10) {
+                dd = '0'+dd
+            }
+
+            if(mm<10) {
+                mm = '0'+mm
+            }
+
+            $("#input_from").attr("value",yyyy+"-"+mm+"-"+dd)
+            $("#input_to").attr("value",yyyy+"-"+mm+"-"+dd)
+        }()
+
+        $("#submit").on('click',function () {
+
+            var keyword = $("#input_keyword").val().split(" ").join("%20");
+            var from = $("#input_from").val();
+            var to= $("#input_to").val();
+            var limit = $("#input_limit").val();
+            var month = (from.split("-"))[1];
+            var start_date=(from.split("-"))[2];
+            var end_date=(to.split("-"))[2];
+
+            var url = host+port+"/search_job?keyword="+keyword+"&month="+month+"&start_date="+start_date+"&end_date="+end_date+"&limit="+limit;
+//            var url = "http://www.mocky.io/v2/59ed5e963300004b00b5c57e";
+
+
+            if((keyword.trim()).length==0){
+                alert("key word is required")
+            } else if((limit.trim()).length==0||limit<5) {
+                    alert("limit must be equal or larger than 5")
+            } else if(isNaN(limit)){
+                alert("limit must be a number")
+            } else {
+
+//                alert(host+"/search_job?keyword="+keyword+"&month="+month+"&start_date="+start_date+"&end_date="+end_date+"&limit="+limit)
+                $.ajax({
+                    url:url,
+                    success:function () {
+                        $("#search").attr("style","display:none");
+                        $("#table").attr("style","display:block");
+                        showChart(url)
+                    },
+                    error:function () {
+                        console.log("failed");
+                    },
+                    header:{
+                        'Content-Type': 'application/json',
+                        'charset': 'utf-8',
+                        'Access-Control-Allow-Origin': 'http://192.168.88.188',
+                        'Access-Control-Allow-Methods': 'PUT,POST,GET,DELETE,OPTIONS'
+                    }
+                })
+            }
+
+
+
+
+//            getProgress();
+//            setTimeout(500,getProgress());
+        })
+    })
+
+</script>
+</body>
+</html>
